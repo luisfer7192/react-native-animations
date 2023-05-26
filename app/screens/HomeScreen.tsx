@@ -1,8 +1,8 @@
 import React from 'react';
-import {Button} from 'react-native';
 import {NativeStackScreenProps} from 'react-native-screens/native-stack';
-import AnimatedComponent from '../components/AnimatedComponent';
 import DrawerMenu from '../components/DrawerMenu';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {StyleSheet, Text} from 'react-native';
 
 type RootStackParamList = {
   Profile: {name: string};
@@ -18,14 +18,20 @@ export type HomeScreenProps = {
 const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
   return (
     <>
-      <DrawerMenu navigation={navigation} />
-      {/* <Button
-        title="Go to Profile example"
-        onPress={() => navigation.navigate('Profile', {name: 'Example'})}
-      />
-      <AnimatedComponent /> */}
+      <GestureHandlerRootView style={styles.container}>
+        <DrawerMenu navigation={navigation}>
+          <Text>Content page here</Text>
+        </DrawerMenu>
+      </GestureHandlerRootView>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1e1e23',
+  },
+});
 
 export default HomeScreen;

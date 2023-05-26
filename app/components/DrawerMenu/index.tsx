@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback} from 'react';
 import {
-  Button,
   Dimensions,
   Image,
   Platform,
   StyleSheet,
   Text,
+  TouchableHighlight,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -23,6 +23,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {HomeScreenProps} from '../../screens/HomeScreen';
+import MenuButton from '../MenuButton';
 
 interface DrawerMenuProps extends HomeScreenProps {
   children?: JSX.Element;
@@ -34,12 +35,13 @@ const THRESHOLD = SCREEN_WIDTH / 3;
 
 function DrawerMenu({navigation, children}: DrawerMenuProps) {
   const translateX = useSharedValue(0);
-  const rotation = useSharedValue(0); // New shared value for rotation
-  const translateY = useSharedValue(0); // Nueva variable compartida para la translación en Y
+  const rotation = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const drawerTranslateY = useSharedValue(0); // New shared value for drawer translation on the Y-axis
 
   const panGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
-    {x: number; y: number} // Agrega el valor compartido para la translación en Y
+    {x: number; y: number}
   >({
     onStart: (_, context) => {
       context.x = translateX.value;
@@ -47,15 +49,16 @@ function DrawerMenu({navigation, children}: DrawerMenuProps) {
     },
     onActive: (event, context) => {
       translateX.value = Math.max(event.translationX + context.x, 0);
-      translateY.value = Math.max(event.translationY + context.y, 0); // Actualiza el valor de la translación en Y
+      translateY.value = Math.max(event.translationY + context.y, 0);
     },
     onEnd: () => {
       if (translateX.value <= THRESHOLD) {
         translateX.value = withTiming(0);
-        translateY.value = withTiming(0); // Resetea la translación en Y cuando finaliza el gesto
+        translateY.value = withTiming(0);
         rotation.value = withTiming(0);
       } else {
         translateX.value = withTiming(SCREEN_WIDTH / 2);
+        translateY.value = withTiming(30);
         rotation.value = withTiming(-15);
       }
     },
@@ -74,21 +77,29 @@ function DrawerMenu({navigation, children}: DrawerMenuProps) {
       transform: [
         {perspective: 100},
         {translateX: translateX.value},
-        {translateY: translateY.value}, // Agrega la translación en Y animada
+        {translateY: translateY.value},
         {rotate: `${rotation.value}deg`},
       ],
     };
   }, []);
 
+  const drawerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{translateY: drawerTranslateY.value}],
+    };
+  });
+
   const onPress = useCallback(() => {
     if (translateX.value > 0) {
       translateX.value = withTiming(0);
       translateY.value = withTiming(0);
-      rotation.value = withTiming(0); // Reset rotation when button is pressed
+      rotation.value = withTiming(0);
+      drawerTranslateY.value = withTiming(0);
     } else {
       translateX.value = withTiming(SCREEN_WIDTH / 1.5);
-      translateY.value = withTiming(30); // Add downward translation animation of 30px
-      rotation.value = withTiming(-15); // Rotate by -15 degrees when button is pressed
+      translateY.value = withTiming(30);
+      rotation.value = withTiming(-15);
+      drawerTranslateY.value = withTiming(30); // Animate the drawer to move down by 30px
     }
   }, []);
 
@@ -106,12 +117,33 @@ function DrawerMenu({navigation, children}: DrawerMenuProps) {
           {children}
         </Animated.View>
       </PanGestureHandler>
-      <View style={styles.drawer}>
-        <Button
-          title="Go to Profile example"
-          onPress={() => navigation.navigate('Profile', {name: 'Example'})}
-        />
-      </View>
+      <Animated.View style={[styles.drawer, drawerStyle]}>
+        <View style={styles.drawerContainer}>
+          <Text style={styles.menuTitle}>Beka</Text>
+          <MenuButton
+            onPress={() => navigation.navigate('Profile', {name: 'Example'})}
+            label="START"
+            selected
+          />
+          <MenuButton
+            onPress={() => navigation.navigate('Profile', {name: 'Example'})}
+            label="Your Cart"
+          />
+          <MenuButton
+            onPress={() => navigation.navigate('Profile', {name: 'Example'})}
+            label="Favourites"
+          />
+          <MenuButton
+            onPress={() => navigation.navigate('Profile', {name: 'Example'})}
+            label="Your Orders"
+          />
+          <View style={styles.line} />
+          <MenuButton
+            onPress={() => navigation.navigate('Profile', {name: 'Example'})}
+            label="Sigh Out"
+          />
+        </View>
+      </Animated.View>
     </View>
   );
 }
@@ -125,7 +157,6 @@ const styles = StyleSheet.create({
     backgroundColor: BACKGROUND_COLOR,
   },
   safe: {
-    // workaround for the SafeAreaView in Android (use the react-native-safe-area-context package)
     marginTop: Platform.OS === 'android' ? 30 : 0,
   },
   drawer: {
@@ -133,10 +164,15 @@ const styles = StyleSheet.create({
     left: 0,
     width: SCREEN_WIDTH,
     height: '100%',
-    backgroundColor: '#ddd',
+    backgroundColor: '#16162A',
     zIndex: 0,
     alignItems: 'flex-start',
-    // justifyContent: 'center',
+    paddingTop: 120,
+    paddingLeft: 25,
+    borderTopLeftRadius: 30,
+  },
+  drawerContainer: {
+    width: SCREEN_WIDTH / 2.3,
   },
   animatedContainer: {
     backgroundColor: 'white',
@@ -162,5 +198,25 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 20,
     letterSpacing: 3,
+  },
+  menuTitle: {
+    color: 'white',
+    fontSize: 30,
+    alignSelf: 'center',
+    fontWeight: '900',
+    marginBottom: 20,
+  },
+  drawerSelectionContainer: {
+    backgroundColor: '#3F2838',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  line: {
+    width: 160,
+    height: 1,
+    borderWidth: 1,
+    borderColor: '#FFFFFF54',
+    marginVertical: 30,
   },
 });
